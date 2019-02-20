@@ -22,12 +22,15 @@ given path.
 '
 
 . ./test-lib.sh
-. "$TEST_DIRECTORY"/test-lib-event.sh
 
-rm lock >/dev/null 2>/dev/null
-projfs_start test_projfs_handlers source target --timeout 1 --lock-file lock || exit 1
+projfs_start test_projfs_handlers source target \
+	--timeout 1 --lock-file lock || exit 1
 
-# wait_mount will trigger a projection, so we need to reset it to empty
+# Since a system daemon may trigger a projection, and if not, our wait_mount
+# will have done so, we need to reset the top-level directory's projection
+# flag after we suspect all the daemons have probed the new mount point.
+# TODO: Define and use a projected subdir instead (when proj lists are ready).
+sleep 1
 setfattr -n user.projection.empty -v 0x01 source
 
 test_expect_success 'test concurrent access does not trigger failure' '
