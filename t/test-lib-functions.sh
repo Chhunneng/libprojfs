@@ -754,25 +754,6 @@ projfs_start () {
 	trap projfs_stop EXIT
 }
 
-# Run the given command twice in parallel, wait for both to complete, and
-# return with 1 if at least one of the executions fails.
-projfs_run_twice () {
-	"$@" &
-	pidA="$!"
-	"$@" &
-	pidB="$!"
-
-	ret=0
-	if ! wait $pidA; then
-		ret=1
-	fi
-	if ! wait $pidB; then
-		ret=1
-	fi
-
-	return $ret
-}
-
 # Stop the projected filesystem command that was started by projfs_start()
 # and wait for its umount operation to be completed.
 projfs_stop () {
@@ -798,7 +779,7 @@ EXEC_ERR="exec.err"
 # To skip logging to an error log, "$4" should be an empty string.
 # Note that command arguments with internal spaces must have single quotes
 # passed in the argument, e.g., "'foo bar'".
-# Output and errors from the command will be appended to "$EXEC_OUT" and
+# Output and errors from the command will be appended to "$EXEC_LOG" and
 # "$EXEC_ERR", respectively.
 projfs_log_exec () {
 	exec_log="$1"; shift
@@ -819,6 +800,25 @@ projfs_log_exec () {
 		echo -n "$err_msg" >>"$exec_err" &&
 		cat $EXEC_PID >>"$exec_err" &&
 		echo '' >>"$exec_err"
+	fi
+
+	return $ret
+}
+
+# Run the given command twice in parallel, wait for both to complete, and
+# return with 1 if at least one of the executions fails.
+projfs_run_twice () {
+	"$@" >>"$EXEC_LOG" 2>>"$EXEC_ERR" &
+	pidA="$!"
+	"$@" >>"$EXEC_LOG" 2>>"$EXEC_ERR" &
+	pidB="$!"
+
+	ret=0
+	if ! wait $pidA; then
+		ret=1
+	fi
+	if ! wait $pidB; then
+		ret=1
 	fi
 
 	return $ret
