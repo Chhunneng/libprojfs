@@ -23,6 +23,7 @@
 #include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "test_common.h"
@@ -32,7 +33,8 @@ static int test_handle_event(struct projfs_event *event, const char *desc,
 {
 	unsigned int opt_flags, ret_flags;
 	const char *retfile, *lockfile = NULL;
-	int ret, timeout = 0, fd = 0, res;
+	long int timeout = 0;
+	int fd = 0, ret;
 
 	opt_flags = test_get_opts((TEST_OPT_RETVAL | TEST_OPT_RETFILE |
 				   TEST_OPT_TIMEOUT | TEST_OPT_LOCKFILE),
@@ -59,11 +61,15 @@ static int test_handle_event(struct projfs_event *event, const char *desc,
 	}
 
 	if (lockfile) {
-		fd = open(lockfile, (O_CREAT | O_EXCL | O_RDWR), 0600);
-		if (fd == -1 && errno == EEXIST)
+		fd = open(lockfile, (O_CREAT | O_EXCL | O_WRONLY), 0600);
+		if (fd == -1 && errno == EEXIST) {
 			return -EEXIST;
-		else if (fd == -1)
+		}
+		else if (fd == -1) {
+			fprintf(stderr, "unable to open lockfile: %s: %s\n",
+				lockfile, strerror(errno));
 			return -EINVAL;
+		}
 	}
 
 	if (timeout)
@@ -71,9 +77,11 @@ static int test_handle_event(struct projfs_event *event, const char *desc,
 
 	if (lockfile) {
 		close(fd);
-		res = unlink(lockfile);
-		if (res == -1)
+		if (unlink(lockfile) == -1) {
+			fprintf(stderr, "unable to remove lockfile: %s: %s\n",
+				lockfile, strerror(errno));
 			return -EINVAL;
+		}
 	}
 
 	if ((ret_flags & TEST_VAL_SET) == TEST_VAL_UNSET)
