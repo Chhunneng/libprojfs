@@ -1491,7 +1491,7 @@ int projfs_create_proj_symlink(struct projfs *fs, const char *path,
 
 	if (!check_safe_rel_path(path))
 		return EINVAL;
-	
+
 	res = symlinkat(target, fs->lowerdir_fd, path);
 	if (res == -1)
 		return errno;
