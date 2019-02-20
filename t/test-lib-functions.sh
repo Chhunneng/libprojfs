@@ -807,7 +807,7 @@ projfs_log_exec () {
 
 # Run the given command twice in parallel, wait for both to complete, and
 # return with 1 if at least one of the executions fails.
-projfs_run_twice () {
+projfs_exec_twice () {
 	"$@" >>"$EXEC_LOG" 2>>"$EXEC_ERR" &
 	pidA="$!"
 	"$@" >>"$EXEC_LOG" 2>>"$EXEC_ERR" &

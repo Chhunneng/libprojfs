@@ -53,6 +53,7 @@ static const struct retval errno_retvals[] = {
 	{ "null",	0		},
 	{ "allow", 	PROJFS_ALLOW	},
 	{ "deny",	PROJFS_DENY	},
+	{ retval_entry(EAGAIN)		},
 	{ retval_entry(EBADF)		},
 	{ retval_entry(EINPROGRESS)	},
 	{ retval_entry(EINVAL)		},
